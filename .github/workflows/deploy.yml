@@ -40,9 +40,14 @@ jobs:
       - name: Build
         run: npm run build
 
+      # 上传构建产物作为构件
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages
+          path: dist
+
       # 部署到GitHub Pages
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
         id: deployment
-        with:
-          folder: dist
