@@ -40,12 +40,23 @@ jobs:
       - name: Build
         run: npm run build
 
+      # 检查构建产物
+      - name: Check build files
+        run: |
+          echo "=== 构建产物列表 ==="
+          ls -la dist/
+          echo "=== 构建产物大小 ==="
+          du -sh dist/
+          echo "=== 检查是否有硬链接或符号链接 ==="
+          find dist/ -type l -ls || echo "没有找到符号链接"
+
       # 上传构建产物作为构件
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: github-pages
           path: dist
+          if-no-files-found: error
 
       # 部署到GitHub Pages
       - name: Deploy to GitHub Pages
