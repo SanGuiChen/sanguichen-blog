@@ -1,57 +1,32 @@
-# GitHub Actions 自动部署配置文件
 name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [master]
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+    branches:
+      - main # 监听 main 分支的推送
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "18"
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Build
+      - name: Build project
         run: npm run build
 
-      - name: Check for symlinks
-        run: |
-          echo "=== 检查符号链接 ==="
-          find dist/ -type l -ls
-          if [ -n "$(find dist/ -type l)" ]; then
-            echo "错误：发现符号链接，GitHub Pages 不支持。"
-            exit 1
-          fi
-
-      - name: Check for hard links
-        run: |
-          echo "=== 检查硬链接 ==="
-          find dist/ -type f -links +1 -ls
-          if [ -n "$(find dist/ -type f -links +1)" ]; then
-            echo "错误：发现硬链接，GitHub Pages 不支持。"
-            exit 1
-          fi
-
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
-        id: deployment
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          path: dist
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
