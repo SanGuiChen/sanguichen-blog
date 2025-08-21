@@ -1,0 +1,1 @@
+const e=[{slug:"vibe-coding-blog",title:"我的第一个博客：用 Qwen3 + Trae 实现「Vibe Coding」全记录（备注：这篇也是 Qwen3 总结的，基本没怎么人工审核）",summary:"一名前端工程师测试AI编程边界的实验记录，全程使用Qwen3+Trae实现React博客项目",date:"2025-04-05",readTime:"6分钟",tags:["AI编程","React","博客","前端开发","Vite"]}];export{e as default};
