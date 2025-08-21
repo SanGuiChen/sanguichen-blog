@@ -49,16 +49,10 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ slug }) => {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        // 动态导入Markdown文件
-        const postFiles = import.meta.glob("/src/assets/posts/*.md", {
-          query: "?raw",
-          import: "default",
-        });
-        const fileKey = `/src/assets/posts/${slug}.md`;
-
-        if (postFiles[fileKey]) {
-            const markdown = await postFiles[fileKey]();
-            const parsed = fm(markdown as string);
+        try {
+          // 使用相对路径动态导入Markdown文件
+          const markdown = await import(`../../assets/posts/${slug}.md?raw`);
+          const parsed = fm(markdown.default);
           setContent(parsed.body);
 
           // 确保所有元数据正确处理
@@ -66,8 +60,8 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ slug }) => {
           // 确保date始终是格式化的字符串
           postMeta.date = formatDate(postMeta.date);
           setMeta(postMeta);
-        } else {
-          setError(`找不到文章: ${slug}`);
+        } catch (importError) {
+          setError(`找不到文章: ${slug} (${importError instanceof Error ? importError.message : String(importError)})`);
         }
       } catch (err) {
         setError(
