@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
-import fm from "front-matter";
+import postsData from '../data/posts.json';
 
 interface BlogDetailProps {
   slug: string;
@@ -14,6 +14,7 @@ interface PostMeta {
   summary: string;
   tags: string[];
   readTime: string;
+  content: string;
 }
 
 const BlogDetail: React.FC<BlogDetailProps> = ({ slug }) => {
@@ -24,6 +25,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ slug }) => {
     summary: "",
     tags: [],
     readTime: "",
+    content: ""
   });
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,32 +49,34 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ slug }) => {
   };
 
   useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        try {
-          // 使用相对路径动态导入Markdown文件
-          const markdown = await import(`../../assets/posts/${slug}.md?raw`);
-          const parsed = fm(markdown.default);
-          setContent(parsed.body);
-
-          // 确保所有元数据正确处理
-          const postMeta = parsed.attributes as PostMeta;
-          // 确保date始终是格式化的字符串
-          postMeta.date = formatDate(postMeta.date);
-          setMeta(postMeta);
-        } catch (importError) {
-          setError(`找不到文章: ${slug} (${importError instanceof Error ? importError.message : String(importError)})`);
-        }
-      } catch (err) {
-        setError(
-          `加载文章失败: ${err instanceof Error ? err.message : String(err)}`
-        );
-      } finally {
-        setLoading(false);
+    try {
+      // 从postsData中查找对应slug的文章
+      const post = postsData.find(p => p.slug === slug);
+      
+      if (post) {
+        // 直接设置文章内容和元数据
+        setContent(post.content);
+        
+        // 确保所有元数据正确处理
+        const postMeta: PostMeta = {
+          title: post.title || '',
+          date: formatDate(post.date),
+          summary: post.summary || '',
+          tags: post.tags || [],
+          readTime: post.readTime || '',
+          content: post.content || ''
+        };
+        setMeta(postMeta);
+      } else {
+        setError(`找不到文章: ${slug}`);
       }
-    };
-
-    fetchPost();
+    } catch (err) {
+      setError(
+        `加载文章失败: ${err instanceof Error ? err.message : String(err)}`
+      );
+    } finally {
+      setLoading(false);
+    }
   }, [slug]);
 
   if (loading) return <div className="text-center py-12">加载中...</div>;

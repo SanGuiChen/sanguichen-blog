@@ -30,7 +30,7 @@ const generatePostsJson = async () => {
       const content = fs.readFileSync(filePath, 'utf-8');
       
       // 解析front matter
-      const { attributes } = matter(content);
+      const { attributes, body } = matter(content);
       
       // 获取slug（文件名不带扩展名）
       const slug = path.basename(file, '.md');
@@ -49,7 +49,8 @@ const generatePostsJson = async () => {
         summary: attributes.summary || '',
         date: formatDate(attributes.date),
         readTime: attributes.readTime || '',
-        tags: attributes.tags || []
+        tags: attributes.tags || [],
+        content: body // 添加文章内容
       };
       
       posts.push(post);
