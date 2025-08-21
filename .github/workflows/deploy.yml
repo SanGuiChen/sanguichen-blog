@@ -1,64 +1,57 @@
 # GitHub Actions 自动部署配置文件
 name: Deploy to GitHub Pages
 
-# 在push到main分支时触发工作流
 on:
   push:
     branches: [master]
 
-# 设置权限
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# 工作流任务
 jobs:
   deploy:
-    # 运行环境
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      # 检出代码
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 设置Node.js环境
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "npm"
 
-      # 安装依赖
       - name: Install dependencies
         run: npm install
 
-      # 构建项目
       - name: Build
         run: npm run build
 
-      # 检查构建产物
-      - name: Check build files
+      - name: Check for symlinks
         run: |
-          echo "=== 构建产物列表 ==="
-          ls -la dist/
-          echo "=== 构建产物大小 ==="
-          du -sh dist/
-          echo "=== 检查是否有硬链接或符号链接 ==="
-          find dist/ -type l -ls || echo "没有找到符号链接"
+          echo "=== 检查符号链接 ==="
+          find dist/ -type l -ls
+          if [ -n "$(find dist/ -type l)" ]; then
+            echo "错误：发现符号链接，GitHub Pages 不支持。"
+            exit 1
+          fi
 
-      # 上传构建产物作为构件
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: github-pages
-          path: dist
-          if-no-files-found: error
+      - name: Check for hard links
+        run: |
+          echo "=== 检查硬链接 ==="
+          find dist/ -type f -links +1 -ls
+          if [ -n "$(find dist/ -type f -links +1)" ]; then
+            echo "错误：发现硬链接，GitHub Pages 不支持。"
+            exit 1
+          fi
 
-      # 部署到GitHub Pages
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
         id: deployment
+        with:
+          path: dist
